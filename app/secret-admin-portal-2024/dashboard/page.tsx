@@ -197,6 +197,18 @@ export default function AdminDashboard() {
     enabled: false,
   })
 
+  // Firebase Configuration
+  const [firebaseConfig, setFirebaseConfig] = useState({
+    apiKey: "",
+    authDomain: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: "",
+    databaseURL: "",
+    enabled: false,
+  })
+
   // Complete Content Management - ALL PAGES
   const [pageContent, setPageContent] = useState({
     home: {
@@ -529,6 +541,12 @@ export default function AdminDashboard() {
       if (savedGoogleDriveConfig) {
         setGoogleDriveConfig(JSON.parse(savedGoogleDriveConfig))
       }
+
+      // Load Firebase config
+      const savedFirebaseConfig = localStorage.getItem("firebaseConfig")
+      if (savedFirebaseConfig) {
+        setFirebaseConfig(JSON.parse(savedFirebaseConfig))
+      }
     } catch (error) {
       console.error("Failed to load data:", error)
     }
@@ -664,6 +682,36 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       alert("❌ Google Drive connection failed. Please check your API Key and Folder ID.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Firebase functions
+  const saveFirebaseConfig = () => {
+    localStorage.setItem("firebaseConfig", JSON.stringify(firebaseConfig))
+    alert("✅ Firebase configuration saved successfully!")
+  }
+
+  const testFirebaseConnection = async () => {
+    if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+      alert("❌ Please fill in API Key and Project ID first!")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=${firebaseConfig.apiKey}`,
+      )
+
+      if (response.ok) {
+        alert("✅ Firebase connection successful! Your project is properly configured.")
+      } else {
+        throw new Error("Failed to connect to Firebase")
+      }
+    } catch (error) {
+      alert("❌ Firebase connection failed. Please check your API Key and other credentials.")
     } finally {
       setIsLoading(false)
     }
@@ -2429,6 +2477,142 @@ This is a test email to verify EmailJS configuration.
                         <p>
                           <strong>5. Set Permissions:</strong> Make the folder publicly accessible or share with service
                           account
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Firebase Configuration */}
+                <Card className="border-2 border-orange-200">
+                  <CardHeader>
+                    <CardTitle className="text-base sm:text-lg text-orange-700 flex items-center">
+                      <Globe className="w-5 h-5 mr-2" />
+                      Firebase Configuration
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-xs sm:text-sm text-orange-600 mb-4">
+                      Configure Firebase to enable real-time database, authentication, and cloud storage for your website.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>API Key</Label>
+                        <Input
+                          placeholder="AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                          value={firebaseConfig.apiKey}
+                          onChange={(e) => setFirebaseConfig({ ...firebaseConfig, apiKey: e.target.value })}
+                        />
+                        <p className="text-xs text-orange-600 mt-1">Get from Firebase Console under Project Settings</p>
+                      </div>
+                      <div>
+                        <Label>Auth Domain</Label>
+                        <Input
+                          placeholder="your-project.firebaseapp.com"
+                          value={firebaseConfig.authDomain}
+                          onChange={(e) => setFirebaseConfig({ ...firebaseConfig, authDomain: e.target.value })}
+                        />
+                        <p className="text-xs text-orange-600 mt-1">Auth domain from Firebase Console</p>
+                      </div>
+                      <div>
+                        <Label>Project ID</Label>
+                        <Input
+                          placeholder="your-project-id"
+                          value={firebaseConfig.projectId}
+                          onChange={(e) => setFirebaseConfig({ ...firebaseConfig, projectId: e.target.value })}
+                        />
+                        <p className="text-xs text-orange-600 mt-1">Firebase project ID</p>
+                      </div>
+                      <div>
+                        <Label>Storage Bucket</Label>
+                        <Input
+                          placeholder="your-project.appspot.com"
+                          value={firebaseConfig.storageBucket}
+                          onChange={(e) => setFirebaseConfig({ ...firebaseConfig, storageBucket: e.target.value })}
+                        />
+                        <p className="text-xs text-orange-600 mt-1">Firebase storage bucket for file uploads</p>
+                      </div>
+                      <div>
+                        <Label>Messaging Sender ID</Label>
+                        <Input
+                          placeholder="123456789012"
+                          value={firebaseConfig.messagingSenderId}
+                          onChange={(e) => setFirebaseConfig({ ...firebaseConfig, messagingSenderId: e.target.value })}
+                        />
+                        <p className="text-xs text-orange-600 mt-1">For Firebase Cloud Messaging</p>
+                      </div>
+                      <div>
+                        <Label>App ID</Label>
+                        <Input
+                          placeholder="1:123456789012:web:abcdef1234567890"
+                          value={firebaseConfig.appId}
+                          onChange={(e) => setFirebaseConfig({ ...firebaseConfig, appId: e.target.value })}
+                        />
+                        <p className="text-xs text-orange-600 mt-1">Firebase App ID</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label>Database URL (Optional)</Label>
+                        <Input
+                          placeholder="https://your-project.firebaseio.com"
+                          value={firebaseConfig.databaseURL}
+                          onChange={(e) => setFirebaseConfig({ ...firebaseConfig, databaseURL: e.target.value })}
+                        />
+                        <p className="text-xs text-orange-600 mt-1">For Realtime Database (leave empty if using Firestore)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="enableFirebase"
+                        checked={firebaseConfig.enabled}
+                        onChange={(e) => setFirebaseConfig({ ...firebaseConfig, enabled: e.target.checked })}
+                        className="rounded"
+                      />
+                      <Label htmlFor="enableFirebase" className="text-sm">
+                        Enable Firebase Integration
+                      </Label>
+                    </div>
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                      <Button onClick={saveFirebaseConfig} className="bg-orange-600 hover:bg-orange-700">
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Firebase Config
+                      </Button>
+                      <Button onClick={testFirebaseConnection} variant="outline" disabled={isLoading}>
+                        <TestTube className="w-4 h-4 mr-2" />
+                        {isLoading ? "Testing..." : "Test Connection"}
+                      </Button>
+                    </div>
+
+                    {/* Firebase Setup Instructions */}
+                    <div className="mt-4 p-4 bg-white rounded border">
+                      <h5 className="font-semibold text-sm mb-2">🔥 Firebase Setup Instructions:</h5>
+                      <div className="text-xs text-gray-600 space-y-2">
+                        <p>
+                          <strong>1. Create Project:</strong> Go to{" "}
+                          <a
+                            href="https://console.firebase.google.com/"
+                            target="_blank"
+                            className="text-blue-600 underline"
+                            rel="noreferrer"
+                          >
+                            Firebase Console
+                          </a>{" "}
+                          and create a new project
+                        </p>
+                        <p>
+                          <strong>2. Register App:</strong> Click &quot;Add app&quot; and select Web platform
+                        </p>
+                        <p>
+                          <strong>3. Get Credentials:</strong> Copy your Firebase config from the setup instructions
+                        </p>
+                        <p>
+                          <strong>4. Set Up Services:</strong> Enable Authentication, Firestore, and/or Storage as needed
+                        </p>
+                        <p>
+                          <strong>5. Configure Rules:</strong> Set up Firestore security rules for database access
+                        </p>
+                        <p>
+                          <strong>6. Test Connection:</strong> Use the test button to verify configuration
                         </p>
                       </div>
                     </div>
